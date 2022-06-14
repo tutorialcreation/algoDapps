@@ -21,3 +21,7 @@ class Account:
     @classmethod
     def FromMnemonic(cls,m:str)->"Account":
         return cls(mnemonic.to_private_key(m))
+
+
+if __name__=='__main__':
+    print("test area")
