@@ -13,7 +13,7 @@ class Account:
             self.addr = account.address_from_private_key(privateKey)
         except:
             try:
-                self.sk,self.addr = account.generate_accounts()
+                self.sk,self.addr = account.generate_account()
             except EmptyAddressError as ea:
                 logging.error(ea)
 
