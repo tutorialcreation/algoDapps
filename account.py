@@ -7,7 +7,7 @@ class Account:
     - getting private key and address for an account
     """
 
-    def __init__(self, privateKey:str) -> None:
+    def __init__(self, privateKey:str=None) -> None:
         try:
             self.sk = privateKey
             self.addr = account.address_from_private_key(privateKey)
