@@ -1,4 +1,6 @@
 from algosdk import account,mnemonic
+from algosdk.error import EmptyAddressError
+import logging
 
 class Account:
     """
@@ -6,8 +8,14 @@ class Account:
     """
 
     def __init__(self, privateKey:str) -> None:
-        self.sk = privateKey
-        self.addr = account.address_from_private_key(privateKey)
+        try:
+            self.sk = privateKey
+            self.addr = account.address_from_private_key(privateKey)
+        except:
+            try:
+                self.sk,self.addr = account.generate_accounts()
+            except EmptyAddressError as ea:
+                logging.error(ea)
 
     def getAddress(self)->str:
         return self.addr
