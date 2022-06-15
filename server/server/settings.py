@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'corsheaders',
     #
     'apps.accounts',
-    'apps.notes'
+    'apps.notes',
+    'apps.roles',
 ]
 
 #configure DRF
