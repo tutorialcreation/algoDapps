@@ -1,5 +1,11 @@
-pyteal==0.9.1
-py-algorand-sdk==1.8.0
-mypy==0.910
+pyteal
+py-algorand-sdk
+mypy
 pytest
-black==21.7b0
+black
+django
+djoser
+djangorestframework # https://github.com/sunscrapers/djoser/issues/541
+markdown
+django-filter
+django_cors_headers
