@@ -24,15 +24,16 @@ def simple_auction():
     seller = getTemporaryAccount(client)
     bidder = getTemporaryAccount(client)
 
-    print("Alice (seller account):", seller.getAddress())
+    print("Staff (seller account):", seller.getAddress())
     print("Bob (auction creator account):", creator.getAddress())
-    print("Carla (bidder account)", bidder.getAddress(), "\n")
+    print("Trainee (bidder account)", bidder.getAddress(), "\n")
 
-    print("Alice is generating an example NFT...")
+    print("A staff role is generating an NFT and is issues it \
+        for distribution to who? to the trainees.")
     nftAmount = 1
     nftID = createDummyAsset(client, nftAmount, seller)
     print("The NFT ID is", nftID)
-    print("Alice's balances:", getBalances(client, seller.getAddress()), "\n")
+    print("Staff's balances:", getBalances(client, seller.getAddress()), "\n")
 
     startTime = int(time()) + 10  # start time is 10 seconds in the future
     endTime = startTime + 30  # end time is 30 seconds after start
@@ -57,7 +58,7 @@ def simple_auction():
         "\n",
     )
 
-    print("Alice is setting up and funding NFT auction...")
+    print("A staff member is setting up and funding NFT auction...")
     setupAuctionApp(
         client=client,
         appID=appID,
@@ -70,9 +71,11 @@ def simple_auction():
 
     sellerBalancesBefore = getBalances(client, seller.getAddress())
     sellerAlgosBefore = sellerBalancesBefore[0]
-    print("Alice's balances:", sellerBalancesBefore)
+    print("Staff's balances:", sellerBalancesBefore)
 
     _, lastRoundTime = getLastBlockTimestamp(client)
+    print(lastRoundTime,startTime)
+    # sleep(15)
     if lastRoundTime < startTime + 5:
         sleep(startTime + 5 - lastRoundTime)
     actualAppBalancesBefore = getBalances(client, get_application_address(appID))
@@ -81,12 +84,12 @@ def simple_auction():
     bidAmount = reserve
     bidderBalancesBefore = getBalances(client, bidder.getAddress())
     bidderAlgosBefore = bidderBalancesBefore[0]
-    print("Carla wants to bid on NFT, her balances:", bidderBalancesBefore)
-    print("Carla is placing bid for", bidAmount, "microAlgos")
+    print("A trainee wants to bid on NFT, his/her balances:", bidderBalancesBefore)
+    print("A trainee is placing bid for", bidAmount, "microAlgos")
 
     placeBid(client=client, appID=appID, bidder=bidder, bidAmount=bidAmount)
 
-    print("Carla is opting into NFT with ID", nftID)
+    print("A trainee is opting into NFT with ID", nftID)
 
     optInToAsset(client, nftID, bidder)
 
@@ -98,7 +101,7 @@ def simple_auction():
         print("Waiting {} seconds for the auction to finish\n".format(waitTime))
         sleep(waitTime)
 
-    print("Alice is closing out the auction\n")
+    print("Staff is closing out the auction\n")
     closeAuction(client, appID, seller)
 
     actualAppBalances = getBalances(client, get_application_address(appID))
@@ -110,9 +113,9 @@ def simple_auction():
     assert bidderNftBalance == nftAmount
 
     actualSellerBalances = getBalances(client, seller.getAddress())
-    print("Alice's balances after auction: ", actualSellerBalances, " Algos")
+    print("Staff's balances after auction: ", actualSellerBalances, " Algos")
     actualBidderBalances = getBalances(client, bidder.getAddress())
-    print("Carla's balances after auction: ", actualBidderBalances, " Algos")
+    print("Trainee's balances after auction: ", actualBidderBalances, " Algos")
     assert len(actualSellerBalances) == 2
     # seller should receive the bid amount, minus the txn fee
     assert actualSellerBalances[0] >= sellerAlgosBefore + bidAmount - 1_000
