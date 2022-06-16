@@ -1,18 +1,15 @@
 from rest_framework import viewsets 
-from apps.roles.models import Role 
-from apps.roles.serializers import RoleSerializer
+from apps.assetManager.models import Asset 
+from apps.assetManager.serializers import AssetSerializer
 import os,sys
 sys.path.append(os.path.abspath(os.path.join('../')))
 from example import simple_auction
 
-class RoleViewSet(viewsets.ModelViewSet):
+class AssetViewSet(viewsets.ModelViewSet):
 
-    serializer_class = RoleSerializer
-    queryset = Role.objects.all()
+    serializer_class = AssetSerializer
+    queryset = Asset.objects.all()
 
-    def list(self, request, *args, **kwargs):
-        simple_auction()
-        return super().list(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)

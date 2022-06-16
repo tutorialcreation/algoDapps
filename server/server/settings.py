@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     #
     'apps.accounts',
     'apps.notes',
-    'apps.roles',
+    'apps.assetManager',
 ]
 
 #configure DRF

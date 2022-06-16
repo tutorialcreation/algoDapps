@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from apps.roles.models import Role
+from apps.assetManager.models import Asset
 
-class RoleSerializer(serializers.ModelSerializer):
+class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Role
+        model = Asset
         read_only_fields = (
             "id",
             "created_at",
