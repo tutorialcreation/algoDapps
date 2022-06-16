@@ -1,7 +1,7 @@
 import os
 import logging
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_rest_permission.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
 
 import django
 
