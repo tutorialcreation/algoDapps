@@ -229,6 +229,17 @@ class AssetViewSet(viewsets.ModelViewSet):
         },status=status.HTTP_201_CREATED)
 
     
-        
+    def accept_request(self,request,*args,**kwargs):
+        nft_id = request.data.get('nft_id')
+        app_id = request.data.get('app_id')
+        nft = get_object_or_404(Nft,nft_id=nft_id)
+        nftHolder = Account(nft.sk)
+        client = getAlgodClient()
+        closeAuction(client,app_id,nftHolder)  
+        asset = Asset.objects.filter(nft=nft).last()
+
+        return Response(data={
+            'asset':asset.asset_url
+        },status=status.HTTP_200_OK)      
 
 

@@ -13,4 +13,5 @@ asset_urlpatterns = [
     path("api/v1/donateAsset/",AssetViewSet.as_view({'post':'donate_assets'})),
     path("api/v1/requestAsset/",AssetViewSet.as_view({'post':'request_asset'})),
     path("api/v1/optIn/",AssetViewSet.as_view({'post':'optIn'})),
+    path("api/v1/acceptRequest/",AssetViewSet.as_view({'post':'accept_request'})),
 ]
