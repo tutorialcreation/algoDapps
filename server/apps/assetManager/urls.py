@@ -10,4 +10,5 @@ asset_urlpatterns = [
     path("api/v1/getClient/",AssetViewSet.as_view({'post':'get_algod_client_details'})),
     path("api/v1/genNft/",AssetViewSet.as_view({'post':'gen_nft'})),
     path("api/v1/genApp/",AssetViewSet.as_view({'post':'gen_app'})),
+    path("api/v1/donateAsset/",AssetViewSet.as_view({'post':'donate_assets'})),
 ]

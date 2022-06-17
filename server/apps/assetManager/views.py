@@ -146,6 +146,34 @@ class AssetViewSet(viewsets.ModelViewSet):
         },status=status.HTTP_201_CREATED)
 
     
+    def donate_assets(self,request,*args,**kwargs):
+        nftId = request.data.get('nft_id')
+        appId = request.data.get('app_id')
+        funder_address = request.data.get('funder')
+        nftHolder_address = request.data.get('nft_holder')
+        nftAmount = request.data.get('nft_amount')
+
+        funder_nft = get_object_or_404(Nft,address=funder_address)
+        nftHolder_nft = get_object_or_404(Nft,address=nftHolder_address)
+        
+        funder = Account(funder_nft.sk)
+        nftHolder = Account(nftHolder_nft.sk)
+
+        client = getAlgodClient()
+        setupAuctionApp(
+            client=client,
+            appID=appId,
+            funder=funder,
+            nftHolder=nftHolder,
+            nftID=nftId,
+            nftAmount=nftAmount,
+        )
+
+        return Response(data={
+            f'successfully transferred {nftAmount} Algos  from {funder_address} to {nftHolder_address}'
+        },status=status.HTTP_200_OK)
+
+        
 
 
 
