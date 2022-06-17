@@ -6,6 +6,7 @@ from apps.assetManager.serializers import AssetSerializer
 from django.contrib.auth.models import User
 import os,sys
 import json
+
 sys.path.append(os.path.abspath(os.path.join('../')))
 from time import time, sleep
 
@@ -25,6 +26,7 @@ from auction.testing.resources import (
     createDummyAsset,
 )
 from auction.util import waitForTransaction
+from auction.account import Account
 
 class AssetViewSet(viewsets.ModelViewSet):
 
@@ -109,13 +111,17 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     def gen_app(self,request,*args,**kwargs):
         nftId = request.data.get('nft_id')
+
         nft = get_object_or_404(Nft,nft_id=nftId)
         startTime = int(time()) + int(request.data.get('start_time'))
         endTime = startTime + int(request.data.get('end_time'))
         reserve = int(request.data.get('reserve'))
         increment = int(request.data.get('increment'))
+        creator_address = request.data.get('creator')
+        creator_nft = get_object_or_404(Nft,address=creator_address)
+
         client = getAlgodClient()
-        creator = None
+        creator = Account(creator_nft.sk)
         appID = createAuctionApp(
             client=client,
             sender=creator,
@@ -132,8 +138,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         application.save()
 
         return Response(data={
-            'appID':application.app_id
+            'appID':application.app_id,
+            'funder':creator_nft.address,
+            'nftHolder':nft.address,
+            'nftId':nft.nft_id,
+            'nftAmount':nft.amount
         },status=status.HTTP_201_CREATED)
+
+    
 
 
 
