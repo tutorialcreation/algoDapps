@@ -18,6 +18,10 @@ from auction.util import (
     getBalances,
     getAppGlobalState,
     getLastBlockTimestamp,
+    waitForTransaction,
+    get_created_asset,
+    get_asset_holding
+
 )
 from auction.testing.setup import getAlgodClient
 from auction.testing.resources import (
@@ -25,7 +29,6 @@ from auction.testing.resources import (
     optInToAsset,
     createDummyAsset,
 )
-from auction.util import waitForTransaction
 from auction.account import Account
 
 class AssetViewSet(viewsets.ModelViewSet):
@@ -242,4 +245,18 @@ class AssetViewSet(viewsets.ModelViewSet):
             'asset':asset.asset_url
         },status=status.HTTP_200_OK)      
 
+
+    def get_created_asset(self,request,*args,**kwargs):
+        nft_id = request.data.get('nft_id')
+        nft = get_object_or_404(Nft,nft_id=nft_id)
+        address = request.data.get('address')
+        nft_account = get_object_or_404(Nft,address=address)
+        
+
+        client = getAlgodClient()
+        asset = get_created_asset(client,nft_account.address,nft.nft_id)
+        
+        return Response(json.loads(asset),status=status.HTTP_200_OK)
+
+    
 

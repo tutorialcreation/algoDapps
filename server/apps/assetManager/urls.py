@@ -14,4 +14,6 @@ asset_urlpatterns = [
     path("api/v1/requestAsset/",AssetViewSet.as_view({'post':'request_asset'})),
     path("api/v1/optIn/",AssetViewSet.as_view({'post':'optIn'})),
     path("api/v1/acceptRequest/",AssetViewSet.as_view({'post':'accept_request'})),
+    path("api/v1/getAssetParams/",AssetViewSet.as_view({'post':'get_created_asset'})),
+    # path("api/v1/getAssetParams/",AssetViewSet.as_view({'post':'get_created_asset'})),
 ]
