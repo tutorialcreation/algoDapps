@@ -95,6 +95,15 @@ class AssetViewSet(viewsets.ModelViewSet):
         nft.nft_id = response.assetIndex
         nft.save()
 
+        asset = Asset()
+        asset.nft = nft
+        asset.unit_name = unit_name
+        asset.asset_name = asset_name
+        asset.asset_url = url
+        asset.note = note
+        asset.save()
+
+
         return Response(data={
             'nft_id':nft.nft_id,
             'amount':nft.amount,
@@ -182,7 +191,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         appId = request.data.get('appId')
         bidder_address = request.data.get('bidder')
         bid_amount = request.data.get('bidAmount')
-        nft_id = request.data.get('nft_id')
         bidder_nft = get_object_or_404(Nft,address=bidder_address)
         bidder_nft.is_bidder = True
         bidder_nft.save()
@@ -193,19 +201,34 @@ class AssetViewSet(viewsets.ModelViewSet):
                 bidder=bidder, 
                 bidAmount=bid_amount
         )
-        asset = Asset.objects.filter(nft=bidder_nft)
-        bidded_asset = None
-        if asset.exists():
-            bidded_asset = asset.last()
-        bidded_asset.is_bidded = True
-        bidded_asset.save()
-
+        
         return Response(data={
             'bidder_address':bidder_nft.address
         })
 
 
     def optIn(self,request,*args,**kwargs):
-        pass
+        nft_id = request.data.get('nft_id')
+        bidder_address = request.data.get('bidder')
+        bidder_nft = get_object_or_404(Nft,address=bidder_address)
+        nft = get_object_or_404(Nft,nft_id=nft_id)
+        client = getAlgodClient()
+        bidder = Account(bidder_nft.sk)
+        optInToAsset(client, nft_id, bidder)
+        asset = Asset.objects.filter(nft=nft)
+        bidded_asset = None
+        if asset.exists():
+            bidded_asset = asset.last()
+            bidded_asset.is_bidded = True
+            bidded_asset.bidders.add(bidder_nft)
+            bidded_asset.save()
+        
+        return Response(data={
+            'bidder':bidder_address,
+            'asset':bidded_asset.asset_url
+        },status=status.HTTP_201_CREATED)
+
+    
+        
 
 

@@ -15,12 +15,14 @@ class Nft(models.Model):
 
 
 class Asset(models.Model):
-    nft = models.ForeignKey(Nft,on_delete=models.CASCADE,null=True,blank=True)
+    nft = models.ForeignKey(Nft,on_delete=models.CASCADE,null=True,blank=True,related_name="nftHolder")
     unit_name = models.CharField(max_length=10,null=True,blank=True)
     asset_name = models.CharField(max_length=255,null=True,blank=True)
     asset_url = models.URLField(null=True,blank=True)
     note = models.TextField(null=True,blank=True)
     is_bidded = models.BooleanField(default=False)
+    bidders = models.ManyToManyField(Nft)
+    
 
 
 class Application(models.Model):
