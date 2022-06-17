@@ -31,14 +31,8 @@ from auction.account import Account
 class AssetViewSet(viewsets.ModelViewSet):
 
     serializer_class = AssetSerializer
-    queryset = Asset.objects.all()
+    queryset = Nft.objects.all()
 
-
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-
-    def get_queryset(self):
-        return self.queryset.filter(created_by=self.request.user)
 
     def get_algod_client_details(self,request,*args,**kwargs):
         user_id = request.data.get('user_id')
@@ -118,6 +112,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         reserve = int(request.data.get('reserve'))
         increment = int(request.data.get('increment'))
         creator_address = request.data.get('creator')
+        nft_amount = request.data.get('nft_amount')
         creator_nft = get_object_or_404(Nft,address=creator_address)
 
         client = getAlgodClient()
@@ -131,6 +126,15 @@ class AssetViewSet(viewsets.ModelViewSet):
             endTime=endTime,
             reserve=reserve,
             minBidIncrement=increment,
+        )
+        nftHolder = Account(nft.sk)
+        setupAuctionApp(
+            client=client,
+            appID=appID,
+            funder=creator,
+            nftHolder=nftHolder,
+            nftID=nftId,
+            nftAmount=nft_amount,
         )
         application = Application()
         application.app_id = appID
@@ -173,8 +177,35 @@ class AssetViewSet(viewsets.ModelViewSet):
             f'successfully transferred {nftAmount} Algos  from {funder_address} to {nftHolder_address}'
         },status=status.HTTP_200_OK)
 
-        
+
+    def request_asset(self,request,*args,**kwargs):
+        appId = request.data.get('appId')
+        bidder_address = request.data.get('bidder')
+        bid_amount = request.data.get('bidAmount')
+        nft_id = request.data.get('nft_id')
+        bidder_nft = get_object_or_404(Nft,address=bidder_address)
+        bidder_nft.is_bidder = True
+        bidder_nft.save()
+        bidder = Account(bidder_nft.sk)
+        client = getAlgodClient()
+        placeBid(client=client, 
+                appID=appId, 
+                bidder=bidder, 
+                bidAmount=bid_amount
+        )
+        asset = Asset.objects.filter(nft=bidder_nft)
+        bidded_asset = None
+        if asset.exists():
+            bidded_asset = asset.last()
+        bidded_asset.is_bidded = True
+        bidded_asset.save()
+
+        return Response(data={
+            'bidder_address':bidder_nft.address
+        })
 
 
+    def optIn(self,request,*args,**kwargs):
+        pass
 
 

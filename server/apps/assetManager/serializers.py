@@ -1,18 +1,8 @@
 from rest_framework import serializers
-from apps.assetManager.models import Asset
+from apps.assetManager.models import Nft
 
 class AssetSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Asset
-        read_only_fields = (
-            "id",
-            "created_at",
-            "created_by",
-        )
-        fields = (
-            "id",
-            "created_at",
-            "created_by",
-            "content"
-        )
+        model = Nft
+        fields = '__all__'

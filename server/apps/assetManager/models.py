@@ -11,6 +11,7 @@ class Nft(models.Model):
     sk = models.CharField(max_length=255,null=True,blank=True)
     role = models.ForeignKey(Group,on_delete=models.CASCADE,null=True,blank=True)
     amount = models.IntegerField(null=True,blank=True)
+    is_bidder = models.BooleanField(default=False)
 
 
 class Asset(models.Model):
@@ -19,9 +20,10 @@ class Asset(models.Model):
     asset_name = models.CharField(max_length=255,null=True,blank=True)
     asset_url = models.URLField(null=True,blank=True)
     note = models.TextField(null=True,blank=True)
+    is_bidded = models.BooleanField(default=False)
 
 
 class Application(models.Model):
     app_id = models.IntegerField(null=True,blank=True)
     app_nft = models.ForeignKey(Nft,on_delete=models.CASCADE,null=True,blank=True)
-    
+

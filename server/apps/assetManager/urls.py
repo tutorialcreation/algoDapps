@@ -11,4 +11,5 @@ asset_urlpatterns = [
     path("api/v1/genNft/",AssetViewSet.as_view({'post':'gen_nft'})),
     path("api/v1/genApp/",AssetViewSet.as_view({'post':'gen_app'})),
     path("api/v1/donateAsset/",AssetViewSet.as_view({'post':'donate_assets'})),
+    path("api/v1/requestAsset/",AssetViewSet.as_view({'post':'request_asset'})),
 ]
