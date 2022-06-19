@@ -3,9 +3,12 @@ from rest_framework import viewsets,status
 from rest_framework.response import Response 
 from apps.assetManager.models import Application, Asset,Nft 
 from apps.assetManager.serializers import AssetSerializer
-from django.contrib.auth.models import User
+
+from django.contrib.auth import get_user_model
 import os,sys
 import json
+
+User=get_user_model()
 
 sys.path.append(os.path.abspath(os.path.join('../')))
 from time import time, sleep
@@ -30,6 +33,7 @@ from auction.testing.resources import (
     createDummyAsset,
 )
 from auction.account import Account
+from .helpers import decoded_token
 
 class AssetViewSet(viewsets.ModelViewSet):
 
@@ -38,11 +42,12 @@ class AssetViewSet(viewsets.ModelViewSet):
 
 
     def get_algod_client_details(self,request,*args,**kwargs):
-        user_id = request.data.get('user_id')
+        user_id = decoded_token(request)
+        user_name = request.data.get('username')
     
         client = getAlgodClient()
         account = getTemporaryAccount(client)
-        user = get_object_or_404(User,id=user_id)
+        user = get_object_or_404(User,username=user_name)
         nft = Nft()
         nft.address = account.getAddress()
         nft.sk = account.getPrivateKey()
@@ -61,6 +66,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         },status=status.HTTP_200_OK)
 
     def gen_nft(self,request,*args,**kwargs):
+        
         nft_pk = request.data.get('nft_pk')
         total = request.data.get('nft_amount')
         unit_name = request.data.get('unit_name')
@@ -259,6 +265,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         return Response(json.loads(asset),status=status.HTTP_200_OK)
 
     def get_asset_holding(self,request,*args,**kwargs):
+
         nft_id = request.data.get('nft_id')
         nft = get_object_or_404(Nft,nft_id=nft_id)
         address = request.data.get('address')

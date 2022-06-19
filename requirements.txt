@@ -9,3 +9,4 @@ djangorestframework # https://github.com/sunscrapers/djoser/issues/541
 markdown
 django-filter
 django_cors_headers
+djangorestframework-simplejwt
