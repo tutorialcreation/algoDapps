@@ -4,14 +4,14 @@ import django.contrib.auth.models
 import django.contrib.auth.validators
 from django.db import migrations, models
 import django.utils.timezone
-
+from django.conf import settings
 
 class Migration(migrations.Migration):
 
     initial = True
 
     dependencies = [
-        ('auth', '0016_alter_user_email'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
