@@ -179,6 +179,27 @@ def setupAuctionApp(
 
     waitForTransaction(client, signedFundAppTxn.get_txid())
 
+def donate(
+    client: AlgodClient,
+    appID: int,
+    funder: Account,
+    nftHolder: Account,
+    nftID: int,
+    nftAmount: int,
+) -> None:
+    appAddr = get_application_address(appID)
+
+    suggestedParams = client.suggested_params()
+    fundNftTxn = transaction.AssetTransferTxn(
+        sender=nftHolder.getAddress(),
+        receiver=appAddr,
+        index=nftID,
+        amt=nftAmount,
+        sp=suggestedParams,
+    )
+    signedFundNftTxn = fundNftTxn.sign(nftHolder.getPrivateKey())
+    client.send_transaction(signedFundNftTxn)
+
 
 def placeBid(client: AlgodClient, appID: int, bidder: Account, bidAmount: int) -> None:
     """Place a bid on an active auction.
