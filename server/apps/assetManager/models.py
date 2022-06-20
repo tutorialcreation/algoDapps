@@ -28,4 +28,9 @@ class Asset(models.Model):
 class Application(models.Model):
     app_id = models.IntegerField(null=True,blank=True)
     app_nft = models.ForeignKey(Nft,on_delete=models.CASCADE,null=True,blank=True)
+    start_time = models.IntegerField(null=True,blank=True)
+    end_time = models.IntegerField(null=True,blank=True)
+    
 
+    def __str__(self) -> str:
+        return str(self.app_id)

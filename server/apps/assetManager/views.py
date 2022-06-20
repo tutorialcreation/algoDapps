@@ -53,9 +53,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         nft.address = account.getAddress()
         nft.sk = account.getPrivateKey()
         nft.user = user
-        group = get_object_or_404(Group,id=user.role)
-        user.groups.add(group)
-        nft.role = group
        
         nft.save()
         
@@ -63,7 +60,6 @@ class AssetViewSet(viewsets.ModelViewSet):
             'pk':nft.pk,
             'address':nft.address,
             'sk':nft.sk,
-            'role':nft.role.id,
             'user':nft.user.id
         },status=status.HTTP_200_OK)
 
@@ -159,6 +155,8 @@ class AssetViewSet(viewsets.ModelViewSet):
         application = Application()
         application.app_id = appID
         application.app_nft = nft
+        application.start_time = startTime
+        application.end_time = endTime
         application.save()
 
         return Response(data={
@@ -202,19 +200,35 @@ class AssetViewSet(viewsets.ModelViewSet):
         appId = request.data.get('appId')
         bidder_address = request.data.get('bidder')
         bid_amount = request.data.get('bidAmount')
+        nft_id = request.data.get('nft_id')
+
+        app = get_object_or_404(Application,app_id=appId)
         bidder_nft = get_object_or_404(Nft,address=bidder_address)
         bidder_nft.is_bidder = True
         bidder_nft.save()
-        bidder = Account(bidder_nft.sk)
         client = getAlgodClient()
+        _, lastRoundTime = getLastBlockTimestamp(client)
+        print(lastRoundTime,app.start_time)
+        if lastRoundTime < app.start_time + 5:
+            sleep(app.start_time + 5 - lastRoundTime)
+        else:
+            sleep(lastRoundTime + 5 - lastRoundTime)
+        bidder = Account(bidder_nft.sk)
         placeBid(client=client, 
                 appID=appId, 
                 bidder=bidder, 
                 bidAmount=bid_amount
         )
+        bidder_nft = get_object_or_404(Nft,address=bidder_address)
+        nft = get_object_or_404(Nft,nft_id=nft_id)
+        
+        optInToAsset(client, nft_id, bidder)
+        asset = Asset.objects.filter(nft=nft).last()
+        
         
         return Response(data={
-            'bidder_address':bidder_nft.address
+            'bidder_address':bidder_nft.address,
+            'asset_url':asset.asset_url
         })
 
 
