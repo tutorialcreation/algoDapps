@@ -5,6 +5,7 @@ from apps.assetManager.models import Application, Asset,Nft
 from apps.assetManager.serializers import AssetSerializer
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 import os,sys
 import json
 
@@ -38,7 +39,7 @@ from .helpers import decoded_token
 class AssetViewSet(viewsets.ModelViewSet):
 
     serializer_class = AssetSerializer
-    queryset = Nft.objects.all()
+    queryset = Asset.objects.all()
 
 
     def get_algod_client_details(self,request,*args,**kwargs):
@@ -52,8 +53,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         nft.address = account.getAddress()
         nft.sk = account.getPrivateKey()
         nft.user = user
-        for group in user.groups.all():
-            nft.role = group
+        group = get_object_or_404(Group,id=user.role)
+        user.groups.add(group)
+        nft.role = group
        
         nft.save()
         
