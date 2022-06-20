@@ -17,7 +17,7 @@ from time import time, sleep
 from algosdk import account, encoding
 from algosdk.logic import get_application_address
 from algosdk.future import transaction
-from auction.operations import createAuctionApp, setupAuctionApp, placeBid, closeAuction
+from auction.operations import createAuctionApp, donate, setupAuctionApp, placeBid, closeAuction
 from auction.util import (
     getBalances,
     getAppGlobalState,
@@ -158,6 +158,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         application.start_time = startTime
         application.end_time = endTime
         application.save()
+        sleep(5)
 
         return Response(data={
             'appID':application.app_id,
@@ -182,7 +183,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         nftHolder = Account(nftHolder_nft.sk)
 
         client = getAlgodClient()
-        setupAuctionApp(
+        donate(
             client=client,
             appID=appId,
             funder=funder,
@@ -221,14 +222,19 @@ class AssetViewSet(viewsets.ModelViewSet):
         )
         bidder_nft = get_object_or_404(Nft,address=bidder_address)
         nft = get_object_or_404(Nft,nft_id=nft_id)
-        
         optInToAsset(client, nft_id, bidder)
-        asset = Asset.objects.filter(nft=nft).last()
+        asset = Asset.objects.filter(nft=nft)
+        bidded_asset = None
+        if asset.exists():
+            bidded_asset = asset.last()
+            bidded_asset.is_bidded = True
+            bidded_asset.bidders.add(bidder_nft)
+            bidded_asset.save()
         
         
         return Response(data={
             'bidder_address':bidder_nft.address,
-            'asset_url':asset.asset_url
+            'asset_url':bidded_asset.asset_url
         })
 
 

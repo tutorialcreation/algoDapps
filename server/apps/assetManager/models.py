@@ -14,6 +14,10 @@ class Nft(models.Model):
     is_bidder = models.BooleanField(default=False)
 
 
+    def __str__(self):
+        return f"{self.user.username}-{self.address}"
+
+
 class Asset(models.Model):
     nft = models.ForeignKey(Nft,on_delete=models.CASCADE,null=True,blank=True,related_name="nftHolder")
     unit_name = models.CharField(max_length=10,null=True,blank=True)

@@ -9,6 +9,7 @@ class AssetSerializer(serializers.ModelSerializer):
     amount = serializers.CharField(source='nft.amount')
     is_bidder = serializers.CharField(source='nft.is_bidder')
     application = serializers.CharField(source='nft.application_set.all')
+    bidders = serializers.CharField(source='bidders.all')
 
     class Meta:
         model = Asset
