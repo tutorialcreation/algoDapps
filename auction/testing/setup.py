@@ -21,8 +21,8 @@ def getKmdClient() -> KMDClient:
     return KMDClient(KMD_TOKEN, KMD_ADDRESS)
 
 
-KMD_WALLET_NAME = "unencrypted-default-wallet"
-KMD_WALLET_PASSWORD = ""
+KMD_WALLET_NAME = "digitalcertswallet"
+KMD_WALLET_PASSWORD = "luther1996-"
 
 kmdAccounts: Optional[List[Account]] = None
 

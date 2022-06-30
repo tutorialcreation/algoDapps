@@ -27,7 +27,10 @@ from auction.util import (
     get_asset_holding
 
 )
-from auction.testing.setup import getAlgodClient
+from auction.testing.setup import (
+    getAlgodClient,
+    getGenesisAccounts
+)
 from auction.testing.resources import (
     getTemporaryAccount,
     optInToAsset,
@@ -46,8 +49,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         user_id = decoded_token(request)
         user_name = request.data.get('username')
     
-        client = getAlgodClient()
-        account = getTemporaryAccount(client)
+        accounts = getGenesisAccounts()
+        # pick the last account always
+        account = accounts[-1]
         user = get_object_or_404(User,username=user_name)
         nft = Nft()
         nft.address = account.getAddress()
@@ -210,6 +214,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         client = getAlgodClient()
         _, lastRoundTime = getLastBlockTimestamp(client)
         print(lastRoundTime,app.start_time)
+        sleep(5)
         if lastRoundTime < app.start_time + 5:
             sleep(app.start_time + 5 - lastRoundTime)
         else:
