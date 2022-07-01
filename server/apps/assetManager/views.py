@@ -52,6 +52,7 @@ class AssetViewSet(viewsets.ModelViewSet):
     serializer_class = AssetSerializer
     queryset = Asset.objects.all()
 
+    
 
     def connect_wallet(self,request,*args,**kwargs):
         address = request.data.get('address')
