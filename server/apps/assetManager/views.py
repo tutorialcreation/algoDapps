@@ -46,30 +46,22 @@ class AssetViewSet(viewsets.ModelViewSet):
 
 
     def get_algod_client_details(self,request,*args,**kwargs):
-        user_id = decoded_token(request)
-        user_name = request.data.get('username')
-    
-        accounts = getGenesisAccounts()
+        address = request.data.get('address')
+
         # pick the last account always
-        account = accounts[-1]
-        user = get_object_or_404(User,username=user_name)
         nft = Nft()
-        nft.address = account.getAddress()
-        nft.sk = account.getPrivateKey()
-        nft.user = user
-       
+        if address:
+            nft.address = address
+               
         nft.save()
         
         return Response(data={
-            'pk':nft.pk,
             'address':nft.address,
-            'sk':nft.sk,
-            'user':nft.user.id
         },status=status.HTTP_200_OK)
 
     def gen_nft(self,request,*args,**kwargs):
         
-        nft_pk = request.data.get('nft_pk')
+        nft_pk = request.data.get('address')
         total = request.data.get('nft_amount')
         unit_name = request.data.get('unit_name')
         asset_name = request.data.get('asset_name')
