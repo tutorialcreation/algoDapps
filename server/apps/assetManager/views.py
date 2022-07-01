@@ -10,11 +10,16 @@ import os,sys
 import json
 
 User=get_user_model()
+purestake_key = 'REPLACE WITH YOUR PURESTAKE API KEY'
+endpoint_address = 'https://testnet-algorand.api.purestake.io/ps1'
+purestake_header = {'X-Api-key': purestake_key}
 
 sys.path.append(os.path.abspath(os.path.join('../')))
 from time import time, sleep
 
-from algosdk import account, encoding
+from algosdk import account, encoding,mnemonic
+from algosdk import algod
+from algosdk.wallet import Wallet
 from algosdk.logic import get_application_address
 from algosdk.future import transaction
 from auction.operations import createAuctionApp, donate, setupAuctionApp, placeBid, closeAuction
@@ -28,8 +33,11 @@ from auction.util import (
 
 )
 from auction.testing.setup import (
+    KMD_WALLET_NAME,
+    KMD_WALLET_PASSWORD,
     getAlgodClient,
-    getGenesisAccounts
+    getKmdClient,
+    getGenesisAccounts,
 )
 from auction.testing.resources import (
     getTemporaryAccount,
@@ -45,35 +53,58 @@ class AssetViewSet(viewsets.ModelViewSet):
     queryset = Asset.objects.all()
 
 
-    def get_algod_client_details(self,request,*args,**kwargs):
+    def connect_wallet(self,request,*args,**kwargs):
         address = request.data.get('address')
 
         # pick the last account always
-        nft = Nft()
-        if address:
-            nft.address = address
-               
-        nft.save()
+        nft,_ = Nft.objects.update_or_create(
+            address = address
         
+        )
+
         return Response(data={
             'address':nft.address,
         },status=status.HTTP_200_OK)
 
+
+
     def gen_nft(self,request,*args,**kwargs):
         
-        nft_pk = request.data.get('address')
+        address = request.data.get('address')
+        user_id = decoded_token(request)
+        user = get_object_or_404(User,id=user_id)
+        group = get_object_or_404(Group,id=user.role)
         total = request.data.get('nft_amount')
         unit_name = request.data.get('unit_name')
         asset_name = request.data.get('asset_name')
         url = request.data.get('url')
         note = request.data.get('note')
 
-        nft = get_object_or_404(Nft,pk=nft_pk)
+        nft = Nft.objects.filter(address=address).last()
         nft.amount = total
+        nft.user = user
+        nft.role = group
         nft.save()
 
+        wallet = Wallet(KMD_WALLET_NAME, KMD_WALLET_PASSWORD, getKmdClient())
+        mnemonics = request.data.get('mnemonic')
+        pk = mnemonic.to_private_key(mnemonics)
+        try:
+            wallet.import_key(pk)
+        except Exception as e:
+            print(e)
 
-        client = getAlgodClient()
+
+
+        my_account = None
+        accounts = getGenesisAccounts()
+        for account in accounts:
+            if address == account.getAddress():
+                my_account = account
+        
+        client  = getAlgodClient()
+
+        
         txn = transaction.AssetCreateTxn(
             sender=nft.address,
             total=nft.amount,
@@ -89,7 +120,8 @@ class AssetViewSet(viewsets.ModelViewSet):
             note=note,
             sp=client.suggested_params(),
         )
-        signedTxn = txn.sign(nft.sk)
+
+        signedTxn = txn.sign(my_account.getPrivateKey())
 
         client.send_transaction(signedTxn)
 
@@ -110,8 +142,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         return Response(data={
             'nft_id':nft.nft_id,
             'amount':nft.amount,
-            'address':nft.address,
-            'sk':nft.sk
+            'address':nft.address
         },status=status.HTTP_201_CREATED)
 
 
@@ -124,11 +155,27 @@ class AssetViewSet(viewsets.ModelViewSet):
         reserve = int(request.data.get('reserve'))
         increment = int(request.data.get('increment'))
         creator_address = request.data.get('creator')
+        address_ = Nft.objects.filter(address=creator_address)
         nft_amount = request.data.get('nft_amount')
-        creator_nft = get_object_or_404(Nft,address=creator_address)
+        creator = None
+        if address_.exists():
+            
+
+            creator_nft = get_object_or_404(Nft,address=creator_address)
+
+            
+        
+        else:
+            creator_nft,_=Nft.objects.update_or_create(
+                address=creator_address
+            )
 
         client = getAlgodClient()
-        creator = Account(creator_nft.sk)
+        accounts = getGenesisAccounts()
+        for account in accounts:
+            if creator_nft.address == account.getAddress():
+                creator = account
+
         appID = createAuctionApp(
             client=client,
             sender=creator,
@@ -139,7 +186,11 @@ class AssetViewSet(viewsets.ModelViewSet):
             reserve=reserve,
             minBidIncrement=increment,
         )
-        nftHolder = Account(nft.sk)
+        nftHolder = None
+        for account in accounts:
+            if nft.address == account.getAddress():
+                nftHolder = account
+
         setupAuctionApp(
             client=client,
             appID=appID,
@@ -174,20 +225,33 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         funder_nft = get_object_or_404(Nft,address=funder_address)
         nftHolder_nft = get_object_or_404(Nft,address=nftHolder_address)
+        nftHolder = None
+        accounts = getGenesisAccounts()
         
-        funder = Account(funder_nft.sk)
-        nftHolder = Account(nftHolder_nft.sk)
+        for account in accounts:
+            if nftHolder_nft.address == account.getAddress():
+                nftHolder = account
+
+        funder = None
+        for account in accounts:
+            if funder_nft.address == account.getAddress():
+                funder = account
+        
 
         client = getAlgodClient()
-        donate(
-            client=client,
-            appID=appId,
-            funder=funder,
-            nftHolder=nftHolder,
-            nftID=nftId,
-            nftAmount=nftAmount,
+        
+        unsigned_txn = transaction.PaymentTxn(
+            funder.getAddress(), 
+            client.suggested_params(), 
+            nftHolder.getAddress(),
+            nftAmount
         )
 
+        signed_txn = unsigned_txn.sign(funder.getPrivateKey())
+        client.send_transaction(signed_txn)
+
+        response = waitForTransaction(client, signed_txn.get_txid())
+        print(response)
         return Response(data={
             f'successfully transferred {nftAmount} Algos  from {funder_address} to {nftHolder_address}'
         },status=status.HTTP_200_OK)
@@ -198,26 +262,44 @@ class AssetViewSet(viewsets.ModelViewSet):
         bidder_address = request.data.get('bidder')
         bid_amount = request.data.get('bidAmount')
         nft_id = request.data.get('nft_id')
-
+        address_ = Nft.objects.filter(address=bidder_address)
+        bidder = None
         app = get_object_or_404(Application,app_id=appId)
-        bidder_nft = get_object_or_404(Nft,address=bidder_address)
+        if address_.exists():
+    
+
+            bidder_nft = get_object_or_404(Nft,address=bidder_address)
+
+    
+        
+        else:
+            bidder_nft,_=Nft.objects.update_or_create(
+                address=bidder_address
+            )
+
+        client = getAlgodClient()
+        accounts = getGenesisAccounts()
+        for account in accounts:
+            if bidder_nft.address == account.getAddress():
+                bidder = account
+
+        
+
+
         bidder_nft.is_bidder = True
         bidder_nft.save()
         client = getAlgodClient()
         _, lastRoundTime = getLastBlockTimestamp(client)
         print(lastRoundTime,app.start_time)
-        sleep(5)
         if lastRoundTime < app.start_time + 5:
             sleep(app.start_time + 5 - lastRoundTime)
         else:
             sleep(lastRoundTime + 5 - lastRoundTime)
-        bidder = Account(bidder_nft.sk)
         placeBid(client=client, 
                 appID=appId, 
                 bidder=bidder, 
                 bidAmount=bid_amount
         )
-        bidder_nft = get_object_or_404(Nft,address=bidder_address)
         nft = get_object_or_404(Nft,nft_id=nft_id)
         optInToAsset(client, nft_id, bidder)
         asset = Asset.objects.filter(nft=nft)
@@ -231,7 +313,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         
         return Response(data={
             'bidder_address':bidder_nft.address,
-            'asset_url':bidded_asset.asset_url
+            # 'asset_url':bidded_asset.asset_url
         })
 
 
@@ -261,7 +343,11 @@ class AssetViewSet(viewsets.ModelViewSet):
         nft_id = request.data.get('nft_id')
         app_id = request.data.get('app_id')
         nft = get_object_or_404(Nft,nft_id=nft_id)
-        nftHolder = Account(nft.sk)
+        nftHolder = None
+        accounts = getGenesisAccounts()
+        for account in accounts:
+            if nft.address == account.getAddress():
+                nftHolder = account
         client = getAlgodClient()
         closeAuction(client,app_id,nftHolder)  
         asset = Asset.objects.filter(nft=nft).last()

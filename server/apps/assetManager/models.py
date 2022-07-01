@@ -15,7 +15,10 @@ class Nft(models.Model):
 
 
     def __str__(self):
-        return f"{self.user.username}-{self.address}"
+        if self.user:
+            return f"{self.user.username}-{self.address}"
+        else:
+            return str(self.pk)
 
 
 class Asset(models.Model):

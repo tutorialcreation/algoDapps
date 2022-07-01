@@ -10,7 +10,7 @@ router = DefaultRouter()
 router.register("assets", AssetViewSet, basename="assets")
 asset_urlpatterns = [
     path("api/v1/", include(router.urls)),
-    path("api/v1/getClient/", authentication_classes([])(permission_classes([AllowAny])(AssetViewSet)).as_view({'post':'get_algod_client_details'})),
+    path("api/v1/getClient/", authentication_classes([])(permission_classes([AllowAny])(AssetViewSet)).as_view({'post':'connect_wallet'})),
     path("api/v1/genNft/",AssetViewSet.as_view({'post':'gen_nft'})),
     path("api/v1/genApp/",AssetViewSet.as_view({'post':'gen_app'})),
     path("api/v1/donateAsset/",AssetViewSet.as_view({'post':'donate_assets'})),
